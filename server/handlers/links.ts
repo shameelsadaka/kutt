@@ -115,7 +115,7 @@ export const edit: Handler = async (req, res) => {
   }
 
   const link = await query.link.find({
-    uuid: req.params.id,
+    uuid: req.path,
     ...(!req.user.admin && { user_id: req.user.id })
   });
 
@@ -161,7 +161,7 @@ export const edit: Handler = async (req, res) => {
 
 export const remove: Handler = async (req, res) => {
   const link = await query.link.remove({
-    uuid: req.params.id,
+    uuid: req.path,
     ...(!req.user.admin && { user_id: req.user.id })
   });
 
@@ -272,16 +272,22 @@ export const redirect = (app: ReturnType<typeof next>): Handler => async (
       : null;
 
   // 2. Get link
-  const address = req.params.id.replace("+", "");
+  let address = req.path.replace("+", "");
+  if (address[0] == "/") address = address.substring(1);
+  console.log(address);
   const link = await query.link.find({
     address,
     domain_id: domain ? domain.id : null
   });
+  console.log(link);
 
   // 3. When no link, if has domain redirect to domain's homepage
   // otherwise rediredt to 404
   if (!link) {
-    return res.redirect(301, domain ? domain.homepage : "/404");
+    return res.redirect(
+      302,
+      domain ? domain.homepage : "/404"
+    );
   }
 
   // 4. If link is banned, redirect to banned page.
@@ -290,7 +296,7 @@ export const redirect = (app: ReturnType<typeof next>): Handler => async (
   }
 
   // 5. If wants to see link info, then redirect
-  const doesRequestInfo = /.*\+$/gi.test(req.params.id);
+  const doesRequestInfo = /.*\+$/gi.test(req.path);
   if (doesRequestInfo && !link.password) {
     return app.render(req, res, "/url-info", { target: link.target });
   }
@@ -328,7 +334,7 @@ export const redirect = (app: ReturnType<typeof next>): Handler => async (
 
 export const redirectProtected: Handler = async (req, res) => {
   // 1. Get link
-  const uuid = req.params.id;
+  const uuid = req.path;
   const link = await query.link.find({ uuid });
 
   // 2. Throw error if no link
@@ -388,7 +394,7 @@ export const redirectCustomDomain: Handler = async (req, res, next) => {
       ? domain.homepage
       : `https://${env.DEFAULT_DOMAIN + path}`;
 
-    return res.redirect(301, redirectURL);
+    return res.redirect(302, redirectURL);
   }
 
   return next();
@@ -396,7 +402,7 @@ export const redirectCustomDomain: Handler = async (req, res, next) => {
 
 export const stats: Handler = async (req, res) => {
   const { user } = req;
-  const uuid = req.params.id;
+  const uuid = req.path;
 
   const link = await query.link.find({
     ...(!user.admin && { user_id: user.id }),

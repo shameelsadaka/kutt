@@ -72,7 +72,7 @@ export const createLink = [
     .trim()
     .isLength({ min: 1, max: 64 })
     .withMessage("Custom URL length must be between 1 and 64.")
-    .custom(value => /^[a-zA-Z0-9-_]+$/g.test(value))
+    .custom(value => /^[a-zA-Z0-9-_/]+$/g.test(value))
     .withMessage("Custom URL is not valid")
     .custom(value => !preservedUrls.some(url => url.toLowerCase() === value))
     .withMessage("You can't use this custom URL."),
@@ -151,7 +151,7 @@ export const editLink = [
     .trim()
     .isLength({ min: 1, max: 64 })
     .withMessage("Custom URL length must be between 1 and 64.")
-    .custom(value => /^[a-zA-Z0-9-_]+$/g.test(value))
+    .custom(value => /^[a-zA-Z0-9-_/]+$/g.test(value))
     .withMessage("Custom URL is not valid")
     .custom(value => !preservedUrls.some(url => url.toLowerCase() === value))
     .withMessage("You can't use this custom URL."),
